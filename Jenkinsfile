@@ -9,10 +9,10 @@ node {
       test()
       junit()
       docker()
-      run()
+      app()
 // pushregistry() 
 // deploy()
-   run()
+//  run()
     
 }
 
@@ -24,7 +24,6 @@ def checkout () {
     node {
         echo 'Building ...........'
         checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/rahulvermaece13/spring-petclinic.git']]])
-
           }
 
       }  
@@ -99,12 +98,13 @@ acsDeploy(azureCredentialsId: 'jenkins-azure-service',
           containerRegistryCredentials: [
               [credentialsId: 'j-credentails', url: 'https://jrepo.domain.com']
           ])
-     
+        
+
  }
  
   }
   
-  def run() {
+  def app() {
     stage 'Run'
         node {
            echo 'Running test ..'
