@@ -108,7 +108,7 @@ acsDeploy(azureCredentialsId: 'jenkins-azure-service',
     stage 'Run'
         node {
            echo 'Running test ..'
-            sh '''j-demo ; docker rm j-demo ; docker run -d -p 80:8080 --name j-demo   j-demo'''
+            sh '''docker stop j-demo ; docker rm j-demo ; docker run -d -p 80:8080 --name j-demo  j-demo'''
 
         }
 } 
