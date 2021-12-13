@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+    name: J-demo
+    namespace: demo
+spec:
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: j-demo
+        spec:
+            containers:
+            - name: j-demo
+              image: jdemo-domain.io/j-demo:latest
+            imagePullSecrets:
+            - name: j-credentials
