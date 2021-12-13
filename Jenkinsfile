@@ -3,13 +3,17 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
-//def jenkins = 'jenkins-slave'
 node {
-      // checkout()
-   build()
-  //     docker()
-  //     pushregistry() 
-       //deploy()
+      checkout()
+      build()
+      test()
+      junit()
+      docker()
+      run()
+// pushregistry() 
+// deploy()
+   run()
+    
 }
 
 
@@ -19,8 +23,8 @@ def checkout () {
     stage 'Checkout'
     node {
         echo 'Building ...........'
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.dx.utc.com:VERMARAH1/springbootBackend.git']]])
-       // sh """sed -i 's/Build number/Build number ${env.BUILD_ID}/g' index.html """
+        checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/rahulvermaece13/spring-petclinic.git']]])
+
           }
 
       }  
@@ -29,28 +33,46 @@ def build() {
     stage 'Build'
         node {
            echo 'Building application ..'
-            sh ''' ./mvnw clean install -DskipTests'''
+            sh '''./mvnw clean install -DskipTests'''
 
-//       make build
-//       make build-rpm'''
         }
 } 
+
+def test() {
+    stage 'Test'
+        node {
+           echo 'Running test ..'
+            sh '''./mvnw test'''
+
+        }
+} 
+    
+    
+    def junit() {
+  stage 'Integration Test'
+      node {
+      echo 'Running integration Test ..'
+      junit 'target/surefire-reports/*.xml'
+      }
+    }
     
     def docker () {
     stage 'Docker Build'
    node {
     def dockerfile = 'Dockerfile'
-    def customImage = docker.build("sample-backend:${env.BUILD_ID}", "-f ${dockerfile} .") 
+    def customImage = docker.build("j-demo:${env.BUILD_ID}", "-f ${dockerfile} .") 
 }
 }
+
+
 
 def pushregistry () {
   stage 'Docker Push'
 
 node {
-    docker.withRegistry('https://dxpregistry.azurecr.io', 'jenkins-azure-sp') {
+    docker.withRegistry('https://jrepo.domain.com', 'j-credentails') {
 
-        def customImage = docker.build("sample-backend:${env.BUILD_ID}") 
+        def customImage = docker.build("j-demo:${env.BUILD_ID}") 
 
         /* Push the container to the custom Registry */
         customImage.push()
@@ -64,30 +86,30 @@ node {
  stage ' Deploy Kubernetes '
 
  node {
-  sh """sed -i 's/latest/${env.BUILD_ID}/g' k8/sample-backend-deployment.yaml """
+  sh """sed -i 's/latest/${env.BUILD_ID}/g' k8/jdemo-backend-deployment.yaml """
 
 acsDeploy(azureCredentialsId: 'jenkins-azure-service',
-          resourceGroupName: 'UTDX_AKS',
-          containerService: 'UTDXAKS | AKS',
+          resourceGroupName: 'J_AKS',
+          containerService: 'J | AKS',
           sshCredentialsId: 'jenkins-azure-aks-cluster',
-          configFilePaths: 'k8/sample-backend*.yaml',
+          configFilePaths: 'k8/jdemo-backend*.yaml',
           enableConfigSubstitution: true,
           
-          // Kubernetes
-         // secretName: 'dxmailer',
-         // secretNamespace: 'dxmailer',
-          
-          // Docker Swarm
-          //swarmRemoveContainersFirst: true,
-          
-          // DC/OS Marathon
-          // dcosDockerCredentialsPath: '<dcos-credentials-path>',
-          
+ 
           containerRegistryCredentials: [
-              [credentialsId: 'jenkins-azure-sp', url: 'https://dxpregistry.azurecr.io']
+              [credentialsId: 'j-credentails', url: 'https://jrepo.domain.com']
           ])
-        
-
+     
  }
-
+ 
   }
+  
+  def run() {
+    stage 'Run'
+        node {
+           echo 'Running test ..'
+            sh '''docker run -d -p 80:8080 --name j-demo   j-demo'''
+
+        }
+} 
+   
